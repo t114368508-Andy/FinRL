@@ -1,0 +1,26 @@
+FROM python:3.11-slim
+
+WORKDIR /src
+
+# CPU-only PyTorch first (avoids pulling the much larger CUDA-bundled wheel)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+# finrl/__init__.py eagerly imports finrl.test/.trade/.train, which pull in the
+# full dependency surface (Alpaca, WRDS, Selenium, etc.) even though the three
+# example scripts only touch YahooDownloader. Installing everything except
+# TA-lib (needs a compiled C library, not part of this import chain) and
+# elegantrl (pulls gym[Box2D] -> pygame, which needs SDL2 dev headers to
+# compile, also not part of this import chain) is more reliable than chasing
+# each transitive import one at a time.
+COPY requirements.txt .
+RUN grep -v -i -e '^TA-lib' -e '^elegantrl' requirements.txt > requirements.filtered.txt \
+    && pip install --no-cache-dir -r requirements.filtered.txt \
+    && pip install --no-cache-dir pyportfolioopt
+
+ENV PYTHONPATH=/src
+
+COPY . .
+
+RUN chmod +x docker/run_pipeline.sh
+
+CMD ["docker/run_pipeline.sh"]

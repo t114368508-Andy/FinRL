@@ -1,0 +1,6 @@
+.git
+docs
+*.md
+.github
+.vscode
+unit_tests
