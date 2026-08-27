@@ -12,10 +12,12 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 # elegantrl (pulls gym[Box2D] -> pygame, which needs SDL2 dev headers to
 # compile, also not part of this import chain) is more reliable than chasing
 # each transitive import one at a time.
-COPY requirements.txt .
-RUN grep -v -i -e '^TA-lib' -e '^elegantrl' requirements.txt > requirements.filtered.txt \
-    && pip install --no-cache-dir -r requirements.filtered.txt \
-    && pip install --no-cache-dir pyportfolioopt
+#
+# docker/requirements.lock.txt 是實測建置成功那次 pip freeze 抓到的確切版本
+# 全集（已排除 TA-lib/elegantrl，torch 由上一步單獨裝），取代原本浮動版本的
+# requirements.txt，避免之後套件出新版又要重新踩雷。
+COPY docker/requirements.lock.txt .
+RUN pip install --no-cache-dir -r requirements.lock.txt
 
 ENV PYTHONPATH=/src
 
