@@ -109,7 +109,14 @@ result = pd.DataFrame({
 result.to_csv("backtest_summary.csv")
 
 initial = 1000000
-final_row = result.dropna(how="all").iloc[-1]
+# dji 是另外用 yf.download(..., end=TRADE_END_DATE) 即時抓的，跟 agent 欄位
+# （來自 trade_data.csv，用 data_split 依 TRADE_END_DATE 切出、實際少一天）
+# 對不齊，outer merge 後最後一列常常是「只有 dji 有值、其餘 agent 全是 NaN」。
+# dropna(how="all") 不會濾掉這種列（不是全部欄位都 NaN），會被 iloc[-1] 選中，
+# 導致印出來的最終報酬率全部是 NaN。改成只看 agent／mvo 欄位是否齊全，
+# 忽略 dji 是否多出一天。
+strategy_cols = ["a2c", "ddpg", "ppo", "td3", "sac", "mvo"]
+final_row = result.dropna(subset=strategy_cols, how="any").iloc[-1]
 print("\n=== FULL FINAL ROW (last trading day with data) ===")
 print(final_row)
 print("\n=== Return % vs initial 1,000,000 ===")

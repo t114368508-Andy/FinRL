@@ -4,3 +4,12 @@ docs
 .github
 .vscode
 unit_tests
+# 之前跑訓練/回測留下的殘留產物：COPY . . 會把這些一起烤進映像檔，
+# run_pipeline.sh 靠檔案是否存在判斷要不要跳過步驟，殘留檔在的話會讓
+# 下載/訓練/回測全部被誤判為「已完成」而整段跳過，容器實際上什麼都沒做。
+train_data.csv
+trade_data.csv
+trained_models/
+results/
+backtest_result.png
+backtest_summary.csv
